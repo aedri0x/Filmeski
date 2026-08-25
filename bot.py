@@ -1,21 +1,38 @@
+Python
+import os
 import random
 import discord
 from discord.ext import commands
+from flask import Flask
+from threading import Thread
 
+# 1. Configuração do Servidor Web (Flask)
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Servidor Web do Bot Ativo!"
+
+def run():
+    # O Render define a porta automaticamente
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# 2. Configuração do Bot do Discord
 intents = discord.Intents.default()
 intents.message_content = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ALTERAÇÃO 1: Substitua o número abaixo pelo ID do canal copiado no Passo 2A.
-# Mantenha o número sem aspas.
-CANAL_FILMES_ID = 1419867980980027523
-
+# Insira o ID numérico do canal
+CANAL_FILMES_ID = 1419867980980027523  
 
 @bot.event
 async def on_ready():
     print(f"Bot conectado com sucesso como {bot.user}")
-
 
 @bot.command(name="filme")
 async def sortear_filme(ctx):
@@ -44,7 +61,14 @@ async def sortear_filme(ctx):
 
         await ctx.send(resposta)
 
+# 3. Execução
+keep_alive()
 
-# ALTERAÇÃO 2: Substitua o texto "SEU_TOKEN_AQUI" pelo Token copiado no Passo 2B.
-# Mantenha as aspas ao redor do token.
-bot.run("MTU0MTY5ODEwMzgwMjA2OTAxMg.GKtD0d.chkzSNJ6X3m8iPSDHWD3G_wceYttJ-wa8N3ssw")
+# O Token não fica mais no código. O Render o injetará de forma segura.
+try:
+    token = os.environ.get("DISCORD_TOKEN")
+    if not token:
+        raise ValueError("Token não encontrado nas Variáveis de Ambiente.")
+    bot.run(token)
+except discord.errors.LoginFailure:
+    print("MTU0MTY5ODEwMzgwMjA2OTAxMg.GKtD0d.chkzSNJ6X3m8iPSDHWD3G_wceYttJ-wa8N3ssw")
