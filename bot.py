@@ -13,7 +13,6 @@ def home():
     return "Servidor Web do Bot Ativo!"
 
 def run():
-    # O Render define a porta automaticamente
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
@@ -26,7 +25,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Insira o ID numérico do canal
+# ALTERAÇÃO NECESSÁRIA: Insira o ID numérico do canal
 CANAL_FILMES_ID = 1419867980980027523  
 
 @bot.event
@@ -46,13 +45,22 @@ async def sortear_filme(ctx):
 
         async for msg in canal.history(limit=200):
             if msg.content.strip() and not msg.author.bot:
-                mensagens_validas.append(msg)
+                
+                # Verifica se a mensagem já possui a reação 🍿
+                ja_assistido = any(str(reaction.emoji) == '🍿' for reaction in msg.reactions)
+                
+                if not ja_assistido:
+                    mensagens_validas.append(msg)
 
         if not mensagens_validas:
-            await ctx.send("Nenhum filme encontrado no histórico.")
+            await ctx.send("Nenhum filme disponível. Todos os itens no histórico recente já possuem a reação 🍿.")
             return
 
         mensagem_sorteada = random.choice(mensagens_validas)
+        
+        # Adiciona o emoji de pipoca à mensagem sorteada no histórico
+        await mensagem_sorteada.add_reaction('🍿')
+
         resposta = (
             f"🎬 **Filme sorteado:** {mensagem_sorteada.content}\n"
             f"*(Sugerido por <@{mensagem_sorteada.author.id}> em {mensagem_sorteada.created_at.strftime('%d/%m/%Y')})*"
@@ -63,7 +71,6 @@ async def sortear_filme(ctx):
 # 3. Execução
 keep_alive()
 
-# O Token não fica mais no código. O Render o injetará de forma segura.
 try:
     token = os.environ.get("DISCORD_TOKEN")
     if not token:
